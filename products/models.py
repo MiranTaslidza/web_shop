@@ -4,7 +4,7 @@ from django.db import models
 class Categories ( models.Model ):
     name = models.CharField( max_length=100 )
     description = models.TextField()
-    icon = models.ImageField( upload_to='categories/' )
+    icon = models.ImageField(upload_to='categories/', null=True, blank=True)
     slug = models.SlugField( unique=True )
     display_order = models.IntegerField( default=0 ) # display order
 
@@ -17,7 +17,7 @@ class SubCategories ( models.Model ):
     description = models.TextField()
     slug = models.SlugField( unique=True )
     category = models.ForeignKey( Categories, on_delete=models.CASCADE )
-    icon = models.ImageField( upload_to='subcategories/' )
+    icon = models.ImageField( upload_to='subcategories/', null=True, blank=True )
     display_order = models.IntegerField( default=0 ) # display order
 
 
@@ -25,17 +25,25 @@ class SubCategories ( models.Model ):
         return self.name   
 
 # Proizvodi    
-
 class Products(models.Model):
+    GENDER_CHOICES = [
+        ('male', 'Muška'),
+        ('female', 'Ženska'),
+        ('unisex', 'Unisex'),
+    ]
+
     name = models.CharField(max_length=100)
     description = models.TextField()
     slug = models.SlugField(unique=True)
     category = models.ForeignKey(Categories, on_delete=models.CASCADE)
     subcategory = models.ForeignKey(SubCategories, on_delete=models.CASCADE, null=True, blank=True)
     price = models.DecimalField(max_digits=10, decimal_places=2)
+    size = models.CharField(max_length=50, null=True, blank=True)
+    gender = models.CharField(max_length=10, choices=GENDER_CHOICES, default='unisex')
     quantity = models.PositiveIntegerField(default=0)
     display_order = models.IntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
+
     def __str__(self):
         return self.name
     
