@@ -13,4 +13,5 @@ urlpatterns = [
     # Products
     path('products/', views.ProductsViewSet.as_view(), name='products-list'),
     path('products/<int:pk>/', views.ProductsDetailView.as_view(), name='products-detail'),
+    path('upload-product-image/', views.ProductImageUploadView.as_view(), name='upload-product-image'),
 ]

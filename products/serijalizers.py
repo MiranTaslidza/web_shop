@@ -43,3 +43,11 @@ class ProductsSerializer(serializers.ModelSerializer):
         if 'subcategory_id' in validated_data:
             instance.subcategory = validated_data.pop('subcategory_id')
         return super().update(instance, validated_data)
+    
+
+# seriijalizer za slike proizvoda
+class ProductImageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProductImage
+        fields = '__all__'
+        read_only_fields = ['id']

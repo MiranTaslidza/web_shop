@@ -1,8 +1,9 @@
 from django.shortcuts import render
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.parsers import MultiPartParser, FormParser
 from .models import Categories, SubCategories, Products, ProductImage, Review
-from .serijalizers import CategoriesSerializer, SubCategoriesSerializer, ProductsSerializer
+from .serijalizers import CategoriesSerializer, SubCategoriesSerializer, ProductsSerializer, ProductImageSerializer
 
 
 
@@ -130,3 +131,32 @@ class ProductsDetailView(APIView):
             return Response(status=404)
         product.delete()
         return Response(status=204)
+    
+# dodavanje slika unutar proizvoda
+class ProductImageUploadView(APIView):
+    parser_classes = (MultiPartParser, FormParser)
+
+    def post(self, request, *args, **kwargs):
+        product_id = request.data.get('product')
+        if not product_id:
+            return Response({'error': 'Product ID is required.'}, status=400)
+
+        images = request.FILES.getlist('images')
+        if not images:
+            return Response({'error': 'No images provided.'}, status=400)
+
+        saved_images = []
+        for i, image in enumerate(images):
+            serializer = ProductImageSerializer(data={
+                'product': product_id,
+                'image': image,
+                'is_main': False,  # ako hoćeš, možeš i ovo dodavati iz requesta
+                'display_order': i
+            })
+            if serializer.is_valid():
+                serializer.save()
+                saved_images.append(serializer.data)
+            else:
+                return Response(serializer.errors, status=400)
+
+        return Response(saved_images, status=201)
