@@ -2,9 +2,45 @@ from django.shortcuts import render
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.parsers import MultiPartParser, FormParser
-from .models import Categories, SubCategories, Products, ProductImage, Review
-from .serijalizers import CategoriesSerializer, SubCategoriesSerializer, ProductsSerializer, ProductImageSerializer
+from .models import Categories, SubCategories, Products, Review
+from .serijalizers import CategoriesSerializer, SubCategoriesSerializer, ProductsSerializer, ProductImageSerializer, ReviewSerializer
+from rest_framework.filters import SearchFilter
+from rest_framework import generics
+from django_filters.rest_framework import DjangoFilterBackend
+from .filters import ProductFilter
 
+
+# filtriranje proizvoda
+class ProductFilterView(generics.ListAPIView):
+    queryset = Products.objects.all()
+    serializer_class = ProductsSerializer
+    filter_backends = [DjangoFilterBackend, SearchFilter]
+    filterset_class = ProductFilter
+    search_fields = ['name', 'description']  # ovde se dodaju polja po kojim se pretrafa vrši
+
+    # sortiranje poi cjeni
+    def get_queryset(self):
+        # Prvo dobijemo osnovni queryset
+        queryset = Products.objects.all()
+        
+        # Provjerimo tip sortiranja
+        sort_type = self.request.query_params.get('sort')
+        
+        # Sortiranje po cjeni
+        if sort_type == 'price_asc':
+            return queryset.order_by('price')
+        elif sort_type == 'price_desc':
+            return queryset.order_by('-price')
+        
+        # Sortiranje po datumu
+        elif sort_type == 'newest':
+            return queryset.order_by('-created_at')
+        elif sort_type == 'oldest':
+            return queryset.order_by('created_at')
+        
+        # Ako nema sortiranja, vratimo originalni queryset
+        return queryset
+  
 
 
 # categories
@@ -160,3 +196,45 @@ class ProductImageUploadView(APIView):
                 return Response(serializer.errors, status=400)
 
         return Response(saved_images, status=201)
+    
+# recenzije
+class ReviewViewSet(APIView):
+    def get(self, request):
+        reviews = Review.objects.all()
+        serializer = ReviewSerializer(reviews, many=True)
+        return Response(serializer.data)
+    
+    def post(self, request):
+        serializer = ReviewSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=201)
+        return Response(serializer.errors, status=400)
+    
+class ReviewDetailView(APIView):
+    def get(self, request, pk):
+        try:
+            review = Review.objects.get(pk=pk)
+        except Review.DoesNotExist:
+            return Response(status=404)
+        serializer = ReviewSerializer(review)
+        return Response(serializer.data)
+    
+    def put(self, request, pk):
+        try:
+            review = Review.objects.get(pk=pk)
+        except Review.DoesNotExist:
+            return Response(status=404)
+        serializer = ReviewSerializer(review, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=400)
+    
+    def delete(self, request, pk):
+        try:
+            review = Review.objects.get(pk=pk)
+        except Review.DoesNotExist:
+            return Response(status=404)
+        review.delete()
+        return Response(status=204)
