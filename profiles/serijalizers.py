@@ -28,6 +28,10 @@ class RegisterSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         validated_data.pop('password2') # uklanjam password2 iz validiranih podataka
         user = User.objects.create_user(**validated_data)
+
+        user.is_active = False # ukljucuje se aktivacija
+        user.save()
+        
         return user
 
 # update seriijalizer
