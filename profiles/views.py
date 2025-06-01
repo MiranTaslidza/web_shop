@@ -2,7 +2,7 @@ from django.shortcuts import render
 from rest_framework.views import APIView
 from  rest_framework.response import Response
 from rest_framework import status
-from .serijalizers import RegisterSerializer, UpdateUserSerializer
+from .serijalizers import RegisterSerializer, UpdateUserSerializer, ChangePasswordSerializer
 from django.contrib.auth.models import User
 from rest_framework.permissions import IsAuthenticated # za authntifikaciju korisnika
 from django.contrib.auth.tokens import default_token_generator #generiše token za verifikaciju korisnika
@@ -104,3 +104,18 @@ class RegisterDetailWiew(APIView):
             return Response(status=status.HTTP_404_NOT_FOUND)
         user.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+# promjena passwopda
+class ChangePasswordView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def put(self, request):
+        serializer = ChangePasswordSerializer(data=request.data, context={'request': request})
+        if serializer.is_valid():
+            user = request.user
+            user.set_password(serializer.validated_data['new_password'])
+            user.save()
+            return Response({'message': 'Lozinka uspešno promenjena.'}, status=200)
+
+        return Response(serializer.errors, status=400)
+

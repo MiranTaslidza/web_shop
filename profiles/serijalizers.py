@@ -31,7 +31,7 @@ class RegisterSerializer(serializers.ModelSerializer):
 
         user.is_active = False # ukljucuje se aktivacija
         user.save()
-        
+
         return user
 
 # update seriijalizer
@@ -39,3 +39,22 @@ class UpdateUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['username', 'email', 'first_name', 'last_name']
+
+# promjena passwopda
+class ChangePasswordSerializer(serializers.Serializer):
+    old_password = serializers.CharField(required=True)
+    new_password = serializers.CharField(required=True)
+    new_password2 = serializers.CharField(required=True)
+
+    def validate_old_password(self, value):
+        user = self.context['request'].user
+        if not user.check_password(value):
+            raise serializers.ValidationError("Stara lozinka nije tačna.")
+        return value
+
+    def validate(self, data):
+        if data['new_password'] != data['new_password2']:
+            raise serializers.ValidationError("Nove lozinke se ne poklapaju.")
+        validate_password(data['new_password'])  # sigurnosna provera nove lozinke
+        return data
+

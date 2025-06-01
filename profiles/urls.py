@@ -17,7 +17,7 @@ urlpatterns = [
     path('login/', views.CustomTokenObtainPairView.as_view(), name='login'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 
-    # verifikacija maila
-    path('verify-email/<uid>/<token>/', views.VerifyEmailView.as_view(), name='verify-email'),
+    path('verify-email/<uid>/<token>/', views.VerifyEmailView.as_view(), name='verify-email'), # verifikacija maila
+    path('change-password/', views.ChangePasswordView.as_view(), name='change-password'), # promjena lozinke
 
 ]
